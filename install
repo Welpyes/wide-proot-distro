@@ -12,13 +12,12 @@ pkg i -y proot-distro
 bin="$HOME/.local/bin"
 
 # directories for cache and wpd
-mkdir -p ~/.local/bin
+mkdir -p $HOME/.local/bin
 mkdir $HOME/.cache/
 
 # wpd install
 curl -o $bin/wpd https://raw.githubusercontent.com/Welpyes/wide-proot-distro/refs/heads/master/wpd
 chmod +x $bin/wpd
 
-clear 
 
 echo "installation complete to invoke it type wpd"
