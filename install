@@ -12,7 +12,7 @@ pkg i -y proot-distro
 bin="$HOME/.local/bin"
 
 # directories for cache and wpd
-mkdir ~/.local/bin
+mkdir -d ~/.local/bin
 mkdir $HOME/.cache/
 
 # wpd install
