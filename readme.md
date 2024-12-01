@@ -10,6 +10,8 @@ curl -sS https://raw.githubusercontent.com/Welpyes/wide-proot-distro/refs/heads/
 ```
 <b>Usage: wpd [OPTIONS]</b>
 ```
+Usage: wpd [OPTIONS]
+
 Options:
   useradd {user}             Add a user to be invoked later.
 
@@ -36,6 +38,8 @@ Options:
 
   bk, backup {distro} {path} Backup the specified distro to a file.
 
+  uninstall                  Uninstall wpd (and optionally proot-distro).
+
   --verbose                  Enable verbose logging.
 
   --help                     Show this help message.
@@ -53,4 +57,6 @@ Examples:
   wpd mv fedora
   wpd restore /path/to/file
   wpd bk debian /path/to/backup.tar.gz
+  wpd uninstall
+  wpd uninstall -rf
 ```
