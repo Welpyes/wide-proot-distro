@@ -1,8 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-# File: wpd
-
-# Help message
+# Help 
 show_help() {
     cat << EOF
 Usage: wpd [OPTIONS]
@@ -33,6 +31,8 @@ Options:
 
   bk, backup {distro} {path} Backup the specified distro to a file.
 
+  uninstall                  Uninstall wpd (and optionally proot-distro).
+
   --verbose                  Enable verbose logging.
 
   --help                     Show this help message.
@@ -50,6 +50,8 @@ Examples:
   wpd mv fedora
   wpd restore /path/to/file
   wpd bk debian /path/to/backup.tar.gz
+  wpd uninstall
+  wpd uninstall -rf
 EOF
 }
 
@@ -60,17 +62,17 @@ verbose=0
 cache_dir="$HOME/.cache"
 cache_file="$cache_dir/wp_user"
 
-# check if cache exist
+# cache dir checker
 mkdir -p "$cache_dir"
 
-# Verbose logging
+# Verbose logging 
 log() {
     if [[ $verbose -eq 1 ]]; then
         echo "[INFO] $1"
     fi
 }
 
-# Error handling
+# Error handler
 error() {
     echo "[ERROR] $1" >&2
     exit 1
@@ -93,7 +95,7 @@ delete_user() {
     fi
 }
 
-# Distro management 
+# Distro management commands
 manage_distro() {
     local action=$1
     local arg1=$2
@@ -144,7 +146,24 @@ manage_distro() {
     esac
 }
 
-# Args paser
+# Uninstallation function 
+uninstall_wpd() {
+    local force=$1
+
+    log "Uninstalling wpd..."
+    rm -rf "$HOME/.local/bin/wpd" "$cache_file"
+
+    if [[ $force == "-rf" ]]; then
+        log "Removing proot-distro package..."
+        pkg uninstall -y proot-distro
+    fi
+
+    log "Uninstall complete."
+    echo "Uninstallation complete."
+    exit 0
+}
+
+# Args parser
 if [[ $# -eq 0 ]]; then
     show_help
     exit 0
@@ -162,6 +181,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         i|install|rm|remove|rs|reset|ls|list|cl|clear|mv|rename|restore|backup|bk)
             manage_distro "$1" "$2" "$3"
+            exit 0
+            ;;
+        uninstall)
+            uninstall_wpd "$2"
             exit 0
             ;;
         -d|--distro)
@@ -186,17 +209,17 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# Distro error handler
+# empty distro handler
 if [[ -z $distro ]]; then
     error "No distro specified."
 fi
 
-# empty cache handler
+# empty cached user hanfet
 if [[ -z $user && -f "$cache_file" && -s "$cache_file" ]]; then
     user=$(cat "$cache_file")
 fi
 
-# Build and execute the login command
+# command compiler
 command="proot-distro login $distro"
 if [[ -n $user ]]; then
     if [[ $user == "root" ]]; then
