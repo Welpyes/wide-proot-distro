@@ -16,7 +16,7 @@ mkdir $bin
 mkdir $HOME/.cache/
 
 # wpd install
-curl -o $bin/wpd (link)
+curl -o $bin/wpd https://raw.githubusercontent.com/Welpyes/wide-proot-distro/refs/heads/master/wpd
 chmod +x $bin/wpd
 
 clear 
