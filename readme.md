@@ -10,8 +10,6 @@ curl -sS https://raw.githubusercontent.com/Welpyes/wide-proot-distro/refs/heads/
 ```
 <b>Usage: wpd [OPTIONS]</b>
 ```
-Usage: wpd [OPTIONS]
-
 Options:
   useradd {user}             Add a user to be invoked later.
 
