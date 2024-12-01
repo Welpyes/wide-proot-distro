@@ -5,6 +5,8 @@ show_help() {
     cat << EOF
 Usage: wpd [OPTIONS]
 
+# HELP
+
 Options:
   useradd {user}             Add a user to be invoked later.
 
