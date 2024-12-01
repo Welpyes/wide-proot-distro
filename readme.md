@@ -1,5 +1,5 @@
 # WIDE PROOT DISTRO
-q. why did you name it like that?
+q. why did you name it like that?<br>
 a. idk
 
 this is just a wrapper with some quality of life features for [Proot-Distro](https://github.com/termux/proot-distro)
