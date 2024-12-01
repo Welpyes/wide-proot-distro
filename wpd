@@ -1,0 +1,175 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+
+# File: prssh
+
+# Help message
+show_help() {
+    cat << EOF
+Usage: prssh [OPTIONS]
+
+Options:
+  useradd {user}             Add a user to be invoked later.
+
+  userdel                    Remove the saved user.
+
+  -d, --distro {distro}      Select a distro to login with.
+
+  -su, --select-user {user} Log in with the specified user
+                            in the selected distro.
+
+  i, install {distro}      Install the specified distro.
+
+  rm, remove {distro}      Remove the specified distro.
+
+  rs, reset {distro}       Reset the specified distro.
+
+  ls, list                 List all available distros.
+
+  --help                   Show this help message.
+
+Examples:
+  prssh useradd welpyes
+  prssh userdel
+  prssh -d fedora
+  prssh -d fedora --su welpyes
+  prssh -d fedora --su root
+  prssh i fedora
+  prssh rm fedora
+  prssh rs fedora
+  prssh ls
+EOF
+}
+
+# Default vars
+distro=""
+user=""
+
+# Useradd Handler
+add_user() {
+    if [[ -z $1 ]]; then
+        echo "Error: No user provided for useradd."
+        exit 1
+    fi
+    echo "$1" > "$HOME/.prssh_user"  # save user to a cache
+    echo "User '$1' added for future use."
+}
+
+# Userdel handler
+delete_user() {
+    if [[ -f "$HOME/.prssh_user" ]]; then
+        rm -f "$HOME/.prssh_user"
+        echo "Saved user removed."
+    else
+        echo "No saved user to remove."
+    fi
+}
+
+# Distro Management command handler
+manage_distro() {
+    local action=$1
+    local distro=$2
+
+    if [[ -z $distro && $action != "list" ]]; then
+        echo "Error: No distro specified for '$action'."
+        exit 1
+    fi
+
+    case $action in
+        install|i)
+            proot-distro install "$distro"
+            ;;
+        remove|rm)
+            proot-distro remove "$distro"
+            ;;
+        reset|rs)
+            proot-distro reset "$distro"
+            ;;
+        list|ls)
+            proot-distro list
+            ;;
+        *)
+            echo "Unknown action: $action"
+            exit 1
+            ;;
+    esac
+}
+
+# args parser idk
+if [[ $# -eq 0 ]]; then
+    show_help
+    exit 0
+fi
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        useradd)
+            add_user "$2"
+            exit 0
+            ;;
+        userdel)
+            delete_user
+            exit 0
+            ;;
+        i|install)
+            manage_distro "install" "$2"
+            exit 0
+            ;;
+        rm|remove)
+            manage_distro "remove" "$2"
+            exit 0
+            ;;
+        rs|reset)
+            manage_distro "reset" "$2"
+            exit 0
+            ;;
+        ls|list)
+            manage_distro "list"
+            exit 0
+            ;;
+        -d|--distro)
+            distro="$2"
+            shift
+            ;;
+        -su|--select-user)
+            user="$2"
+            shift
+            ;;
+        --help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+# distro login check
+if [[ -z $distro ]]; then
+    echo "Error: No distro specified."
+    show_help
+    exit 1
+fi
+
+# cached user checker
+if [[ -z $user && -f "$HOME/.prssh_user" ]]; then
+    user=$(cat "$HOME/.prssh_user")
+fi
+
+# Login command builder(This was a Headache)
+command="proot-distro login $distro"
+
+if [[ -n $user ]]; then
+    if [[ $user == "root" ]]; then
+        # skip tons of shit if user provided is root
+        command+=" -- /bin/bash"
+    else
+        command+=" --shared-tmp -- /bin/bash -c \"su - $user\""
+    fi
+fi
+
+# Execute the login command
+eval "$command"

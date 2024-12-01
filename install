@@ -1,0 +1,24 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+
+cd $HOME
+clear
+
+set -u
+
+# proot-distro install
+pkg i -y root-repo x11-repo
+pkg i -y proot-distro
+
+bin="$HOME/.local/bin"
+
+# directories for cache and wpd
+mkdir $bin
+mkdir $HOME/.cache/
+
+# wpd install
+curl -o $bin/wpd (link)
+chmod +x $bin/wpd
+
+clear 
+
+echo "installation complete to invoke it type wpd"
