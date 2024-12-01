@@ -17,27 +17,40 @@ Options:
 
   -d, --distro {distro}      Select a distro to login with.
 
-  -su, --select-user {user} Log in with the specified user
-                            in the selected distro.
+  -su, --select-user {user}  Log in with the specified user
+                             in the selected distro.
 
-  i, install {distro}      Install the specified distro.
+  i, install {distro}        Install the specified distro.
 
-  rm, remove {distro}      Remove the specified distro.
+  rm, remove {distro}        Remove the specified distro.
 
-  rs, reset {distro}       Reset the specified distro.
+  rs, reset {distro}         Reset the specified distro.
 
-  ls, list                 List all available distros.
+  ls, list                   List all available distros.
 
-  --help                   Show this help message.
+  cl, clear                  Clear proot-distro cache.
+
+  mv, rename {distro}        Rename the specified distro.
+
+  restore {path}             Restore a distro from a file.
+
+  bk, backup {distro} {path} Backup the specified distro to a file.
+
+  --verbose                  Enable verbose logging.
+
+  --help                     Show this help message.
 
 Examples:
-  prssh useradd welpyes
-  prssh userdel
-  prssh -d fedora
-  prssh -d fedora --su welpyes
-  prssh -d fedora --su root
-  prssh i fedora
-  prssh rm fedora
-  prssh rs fedora
-  prssh ls
+  wpd useradd welpyes
+  wpd userdel
+  wpd -d fedora
+  wpd -d fedora --su welpyes
+  wpd i fedora
+  wpd rm ubuntu
+  wpd rs debian
+  wpd ls
+  wpd cl
+  wpd mv fedora
+  wpd restore /path/to/file
+  wpd bk debian /path/to/backup.tar.gz
 ```

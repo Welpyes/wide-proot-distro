@@ -1,11 +1,11 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-# File: prssh
+# File: wpd
 
 # Help message
 show_help() {
     cat << EOF
-Usage: prssh [OPTIONS]
+Usage: wpd [OPTIONS]
 
 Options:
   useradd {user}             Add a user to be invoked later.
@@ -14,87 +14,137 @@ Options:
 
   -d, --distro {distro}      Select a distro to login with.
 
-  -su, --select-user {user} Log in with the specified user
-                            in the selected distro.
+  -su, --select-user {user}  Log in with the specified user
+                             in the selected distro.
 
-  i, install {distro}      Install the specified distro.
+  i, install {distro}        Install the specified distro.
 
-  rm, remove {distro}      Remove the specified distro.
+  rm, remove {distro}        Remove the specified distro.
 
-  rs, reset {distro}       Reset the specified distro.
+  rs, reset {distro}         Reset the specified distro.
 
-  ls, list                 List all available distros.
+  ls, list                   List all available distros.
 
-  --help                   Show this help message.
+  cl, clear                  Clear proot-distro cache.
+
+  mv, rename {distro}        Rename the specified distro.
+
+  restore {path}             Restore a distro from a file.
+
+  bk, backup {distro} {path} Backup the specified distro to a file.
+
+  --verbose                  Enable verbose logging.
+
+  --help                     Show this help message.
 
 Examples:
-  prssh useradd welpyes
-  prssh userdel
-  prssh -d fedora
-  prssh -d fedora --su welpyes
-  prssh -d fedora --su root
-  prssh i fedora
-  prssh rm fedora
-  prssh rs fedora
-  prssh ls
+  wpd useradd welpyes
+  wpd userdel
+  wpd -d fedora
+  wpd -d fedora --su welpyes
+  wpd i fedora
+  wpd rm ubuntu
+  wpd rs debian
+  wpd ls
+  wpd cl
+  wpd mv fedora
+  wpd restore /path/to/file
+  wpd bk debian /path/to/backup.tar.gz
 EOF
 }
 
 # Default vars
 distro=""
 user=""
+verbose=0
+cache_dir="$HOME/.cache"
+cache_file="$cache_dir/wp_user"
 
-# Useradd Handler
-add_user() {
-    if [[ -z $1 ]]; then
-        echo "Error: No user provided for useradd."
-        exit 1
+# check if cache exist
+mkdir -p "$cache_dir"
+
+# Verbose logging
+log() {
+    if [[ $verbose -eq 1 ]]; then
+        echo "[INFO] $1"
     fi
-    echo "$1" > "$HOME/.prssh_user"  # save user to a cache
-    echo "User '$1' added for future use."
 }
 
-# Userdel handler
+# Error handling
+error() {
+    echo "[ERROR] $1" >&2
+    exit 1
+}
+
+# Add a user
+add_user() {
+    [[ -z $1 ]] && error "No user provided for useradd."
+    echo "$1" > "$cache_file"  # Save user to cache
+    log "User '$1' added for future use."
+}
+
+# Delete saved user
 delete_user() {
-    if [[ -f "$HOME/.prssh_user" ]]; then
-        rm -f "$HOME/.prssh_user"
-        echo "Saved user removed."
+    if [[ -f "$cache_file" ]]; then
+        rm -f "$cache_file"
+        log "Saved user removed."
     else
         echo "No saved user to remove."
     fi
 }
 
-# Distro Management command handler
+# Distro management 
 manage_distro() {
     local action=$1
-    local distro=$2
-
-    if [[ -z $distro && $action != "list" ]]; then
-        echo "Error: No distro specified for '$action'."
-        exit 1
-    fi
+    local arg1=$2
+    local arg2=$3
 
     case $action in
         install|i)
-            proot-distro install "$distro"
+            [[ -z $arg1 ]] && error "No distro specified for install."
+            log "Installing distro '$arg1'..."
+            proot-distro install "$arg1"
             ;;
         remove|rm)
-            proot-distro remove "$distro"
+            [[ -z $arg1 ]] && error "No distro specified for removal."
+            log "Removing distro '$arg1'..."
+            proot-distro remove "$arg1"
             ;;
         reset|rs)
-            proot-distro reset "$distro"
+            [[ -z $arg1 ]] && error "No distro specified for reset."
+            log "Resetting distro '$arg1'..."
+            proot-distro reset "$arg1"
             ;;
         list|ls)
+            log "Listing all available distros..."
             proot-distro list
             ;;
+        clear|cl)
+            log "Clearing proot-distro cache..."
+            proot-distro clear-cache
+            ;;
+        rename|mv)
+            [[ -z $arg1 ]] && error "No distro specified for rename."
+            log "Renaming distro '$arg1'..."
+            proot-distro mv "$arg1"
+            ;;
+        restore)
+            [[ -z $arg1 ]] && error "No file path specified for restore."
+            log "Restoring distro from '$arg1'..."
+            proot-distro restore "$arg1"
+            ;;
+        backup|bk)
+            [[ -z $arg1 || -z $arg2 ]] && error "Distro or output path missing for backup."
+            log "Backing up distro '$arg1' to '$arg2'..."
+            proot-distro backup "$arg1" "$arg2"
+            ;;
         *)
-            echo "Unknown action: $action"
-            exit 1
+            error "Unknown action: $action"
             ;;
     esac
 }
 
-# args parser idk
+# Args paser
 if [[ $# -eq 0 ]]; then
     show_help
     exit 0
@@ -110,20 +160,8 @@ while [[ $# -gt 0 ]]; do
             delete_user
             exit 0
             ;;
-        i|install)
-            manage_distro "install" "$2"
-            exit 0
-            ;;
-        rm|remove)
-            manage_distro "remove" "$2"
-            exit 0
-            ;;
-        rs|reset)
-            manage_distro "reset" "$2"
-            exit 0
-            ;;
-        ls|list)
-            manage_distro "list"
+        i|install|rm|remove|rs|reset|ls|list|cl|clear|mv|rename|restore|backup|bk)
+            manage_distro "$1" "$2" "$3"
             exit 0
             ;;
         -d|--distro)
@@ -134,42 +172,39 @@ while [[ $# -gt 0 ]]; do
             user="$2"
             shift
             ;;
+        --verbose)
+            verbose=1
+            ;;
         --help)
             show_help
             exit 0
             ;;
         *)
-            echo "Unknown option: $1"
-            show_help
-            exit 1
+            error "Unknown option: $1"
             ;;
     esac
     shift
 done
 
-# distro login check
+# Distro error handler
 if [[ -z $distro ]]; then
-    echo "Error: No distro specified."
-    show_help
-    exit 1
+    error "No distro specified."
 fi
 
-# cached user checker
-if [[ -z $user && -f "$HOME/.prssh_user" ]]; then
-    user=$(cat "$HOME/.prssh_user")
+# empty cache handler
+if [[ -z $user && -f "$cache_file" && -s "$cache_file" ]]; then
+    user=$(cat "$cache_file")
 fi
 
-# Login command builder(This was a Headache)
+# Build and execute the login command
 command="proot-distro login $distro"
-
 if [[ -n $user ]]; then
     if [[ $user == "root" ]]; then
-        # skip tons of shit if user provided is root
         command+=" -- /bin/bash"
     else
         command+=" --shared-tmp -- /bin/bash -c \"su - $user\""
     fi
 fi
 
-# Execute the login command
+log "Executing: $command"
 eval "$command"
