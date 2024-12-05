@@ -9,10 +9,9 @@ set -u
 pkg i -y root-repo x11-repo
 pkg i -y proot-distro
 
-bin="$HOME/.local/bin"
+bin="/data/data/com.termux/files/usr/bin"
 
-# directories for cache and wpd
-mkdir -p $HOME/.local/bin
+# directories for cache
 mkdir $HOME/.cache/
 
 # wpd install
